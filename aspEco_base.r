@@ -79,9 +79,9 @@ stnrun <- data.frame(stnname=character(),
                      stringsAsFactors=FALSE)
 srct <- 0
 yearrun <- data.frame(stnname=character(),
-                          rmse=numeric(),
-                          exectime=numeric()
-                          ,stringsAsFactors=FALSE)
+                      rmse=numeric(),
+                      exectime=numeric(),
+                      stringsAsFactors=FALSE)
 yrct <- 0
 
 for(ireg in c(1:3,5)){
@@ -143,15 +143,23 @@ for(ireg in c(1:3,5)){
       if(length(validdatesi)>0){
         print(paste(dateseasoni,'to',dateseasonf))
       }
-      
       yrct <- yrct+1
       yearrun[yrct,1] <- as.character(stnname[istn])
+#       yearrun <- data.frame(numdates=sum(logyr),
+#                             numvalidtmin=sum(logyr&!lognatn),
+#                             numvalidtmax=sum(logyr&!lognatx),
+#                             numtxgttn=sum(logyr&!loginvt[is.finite(loginvt)]),
+#                             numvalidprec=sum(logyr&!lognap),
+#                             numvalidswe=sum(logyr&lognaswe)
+#                             )
       yearrun <- data.frame(numdates=sum(logyr),
-                            numvalidtmin=sum(logyr&!lognatn),
-                            numvalidtmax=sum(logyr&!lognatx),
-                            numvalidprec=sum(logyr&!lognap),
-                            numvalidswe=sum(logyr&lognaswe)
-                            )
+                            numnatn=sum(logyr&lognatn),
+                            numnatx=sum(logyr&lognatx),
+                            numinvt=sum(logyr&loginvt[is.finite(loginvt)]),
+                            numnap=sum(logyr&lognap),
+                            numswenop=sum(logyr&logswenop),
+                            numnaswe=sum(logyr&lognaswe)
+      )
     }
 #    next
 # 
