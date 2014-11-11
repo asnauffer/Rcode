@@ -155,7 +155,7 @@ for(ireg in c(1:3,5)){
     #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
     jpeg(paste("../plots/aspEco/aspEcoPchk/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],".jpg",sep=""),
          width=480*3,height=480*2,pointsize=24,quality=100)
-    plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smasp)))
+    plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smasp,na.rm=T)))
     lines(aspdate,smasp,col="red",lwd=linew)
     title(paste("Station",stnname[istn]))#,"Exec time =",exectime[istn],"sec"))
     legend("topright",c("ASP measured","EcoH modeled"),col=c("black","red"),lwd=linew,bty="n")
