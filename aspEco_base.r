@@ -42,10 +42,6 @@ stnrun <- data.frame(stnname=character(),
                      exectime=numeric(),
                      stringsAsFactors=FALSE)
 srct <- 0
-yearrun <- data.frame(stnname=character(),
-                      rmse=numeric(),
-                      exectime=numeric(),
-                      stringsAsFactors=FALSE)
 yrct <- 0
 
 for(ireg in c(1:3,5)){
@@ -73,14 +69,14 @@ for(ireg in c(1:3,5)){
     aspalltmin <- aspall$Temp..Min.
     aspalltmax <- aspall$Temp..Max.
     aspalldate <- as.Date(aspall$Date,format=fmt)
-    aspallY <- format(aspalldate,"%Y")
+    aspallY <- as.numeric(format(aspalldate,"%Y"))
     aspYunique <- unique(aspallY)
     
     # check for missing and invalid data
     lognatx <- is.na(aspalltmax)
     lognatn <- is.na(aspalltmin) 
     lognaswe <- is.na(aspall$Snow.Water.Equivalent) 
-    loginvt <- aspalltmax < aspalltmin
+    logtxlttn <- aspalltmax < aspalltmin
     
     # check for increase in SWE without corresponding daily precipitation
     sweinctol <- 0.0
@@ -93,29 +89,72 @@ for(ireg in c(1:3,5)){
     logswenop <- logsweinc & lognop
 
     # create discard vector (Q: can replace na p with 0?)
-    logbadtp <- lognatx | lognatn | loginvt | lognap #| logswenop
+    logbadtp <- lognatx | lognatn | logtxlttn | lognap #| logswenop
     logdiscard <- logbadtp | logswenop
     
     for(iyr in aspYunique){
-      dateseasoni = paste(as.numeric(iyr)-1,'-10-01',sep='')
+      dateseasoni = paste(iyr-1,'-10-01',sep='')
       dateseasonf = paste(iyr,'-07-01',sep='')
       logyr <- aspalldate>=dateseasoni & aspalldate<=dateseasonf
-      sumswenop <- sum(swediff[logyr & logswenop]) # case described by Dan
-      sumswebadtp <- sum(swediff[logyr & logdiscard]) # this is really what is needed
-      validdatesi <- aspalldate[logyr & !logdiscard]
-      if(length(validdatesi)>0){
-        print(paste(dateseasoni,'to',dateseasonf))
+      logvalidmodel <- logyr & !logdiscard
+      swediffnop <- swediff[logyr & logswenop] # case described by Dan
+      sumswenop <- sum(swediffnop[swediffnop>0],na.rm=T) 
+      swediffdisc <- swediff[logyr & logdiscard] # this is really what is needed
+      sumswebadtp <- sum(swediffdisc[swediffdisc>0],na.rm=T) 
+      validdatesi <- aspalldate[logvalidmodel]
+#       if(length(validdatesi)>0){
+#         print(paste(dateseasoni,'to',dateseasonf))
+#       }
+      if(sum(logvalidmodel)==0){
+        next
       }
       yrct <- yrct+1
-      yearrun[yrct,1] <- as.character(stnname[istn])
-      yearrun <- data.frame(numdates=sum(logyr),
-                            numnatn=sum(logyr&lognatn),
-                            numnatx=sum(logyr&lognatx),
-                            numinvt=sum(logyr&loginvt[is.finite(loginvt)]),
-                            numnap=sum(logyr&lognap),
-                            numswenop=sum(logyr&logswenop),
-                            numnaswe=sum(logyr&lognaswe)
+#      yearrun[yrct,1] <- as.character(stnname[istn])
+      yri <- data.frame(stnname[istn],
+                        dateyr=iyr,
+                        numdates=sum(logyr),
+#                         numnatn=sum(logyr & lognatn),
+#                         numnatx=sum(logyr & lognatx),
+#                         numtxlttn=sum(logyr & logtxlttn,na.rm=T),
+#                         numnap=sum(logyr & lognap),
+                        numbadtp=sum(logyr & logbadtp),
+#                        numswenop=sum(logyr & logswenop),
+                        numswebadtp=sum(logyr & logdiscard),
+#                        sumswenop=sumswenop,
+                        sumswebadtp=sumswebadtp,
+                        numvalidmodel=sum(logvalidmodel),
+#                        numnaswe=sum(logyr & lognaswe),
+                        numvalidcompare=sum(logvalidmodel & !lognaswe)
       )
+      yrfi <- data.frame(stnname[istn],
+                        dateyr=iyr,
+                        numdates=sum(logyr),
+                        numnatn=sum(logyr & lognatn),
+                        numnatx=sum(logyr & lognatx),
+                        numtxlttn=sum(logyr & logtxlttn,na.rm=T),
+                        numnap=sum(logyr & lognap),
+                        numbadtp=sum(logyr & logbadtp),
+                        numswenop=sum(logyr & logswenop),
+                        numswebadtp=sum(logyr & logdiscard),
+                        sumswenop=sumswenop,
+                        sumswebadtp=sumswebadtp,
+                        numvalidmodel=sum(logvalidmodel),
+                        numnaswe=sum(logyr & lognaswe),
+                        numvalidcompare=sum(logvalidmodel & !lognaswe)
+      )
+      if(yrct==1){
+        yearrun <- yri
+        yearrunfull <- yrfi
+      }
+      else {
+        yearrun[yrct,] <- yri
+        yearrunfull[yrct,] <- yrfi
+      }
+      if(is.na(sumswebadtp)){
+        print('stop')
+      }
+      print(paste(dateseasoni,'to',dateseasonf))
+
     }
     #    next
 
