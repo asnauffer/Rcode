@@ -98,6 +98,7 @@ for(ireg in 1){#c(1:3,5)){
       logyr <- aspalldate>=dateseasoni & aspalldate<=dateseasonf
       logvalidmodel <- logyr & !logdiscard
       logvalidcompare <- logvalidmodel & !lognaswe
+      logvalidcompareyr <- logvalidcompare[logyr]
       swediffnop <- swediff[logyr & logswenop] # case described by Dan
       sumswenop <- sum(swediffnop[swediffnop>0],na.rm=T) 
       swediffdisc <- swediff[logyr & logdiscard] # this is really what is needed
@@ -107,7 +108,25 @@ for(ireg in 1){#c(1:3,5)){
       if(sum(logvalidmodel)==0){
         next
       }
+      
+      # run and time SnowMelt
       yrct <- yrct+1
+      asp <- aspall[logvalidmodel,]
+      aspdate <- as.Date(asp$Date,format=fmt)
+      
+      out_asp[yrct] <- paste(istn,try(
+        exectime[yrct] <- round(system.time(
+          sm_asp[[yrct]] <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
+                                     Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
+        ),3)[3]
+      ))
+      #                     },error=function(cond){out_asp[istn]=cond},warning=function(cond){})
+      aspswe <- asp$Snow.Water.Equivalent
+      smswe <- sm_asp[[yrct]]$SnowWaterEq_mm
+      rmse_asp[yrct] <- sqrt(mean((aspswe[logvalidcompareyr]-smswe[logvalidcompareyr])^2))
+                             #,na.rm=T))
+      print(paste(stnname[istn],round(rmse_asp[yrct],3),exectime[yrct]))
+
       yri <- data.frame(stnname[istn],
                         dateyr=iyr,
                         numdates=sum(logyr),
@@ -116,7 +135,9 @@ for(ireg in 1){#c(1:3,5)){
                         sumswebadtp=sumswebadtp,
                         numvalidmodel=sum(logvalidmodel),
                         numvalidcompare=sum(logvalidcompare),
-                        maxdategap=max(datediff,na.rm=T)
+                        maxdategap=max(datediff,na.rm=T),
+                        exectime=exectime[yrct],
+                        rmse=rmse_asp[yrct]
       )
       yrfi <- data.frame(yri,
       #                   stnname[istn],
@@ -132,7 +153,7 @@ for(ireg in 1){#c(1:3,5)){
                         sumswenop=sumswenop,
       #                  sumswebadtp=sumswebadtp,
       #                  numvalidmodel=sum(logvalidmodel),
-                        numnaswe=sum(logyr & lognaswe),
+                        numnaswe=sum(logyr & lognaswe)
       #                  numvalidcompare=sum(logvalidmodel & !lognaswe)
       )
       if(yrct==1){
@@ -146,7 +167,7 @@ for(ireg in 1){#c(1:3,5)){
       if(is.na(sumswebadtp)){
         print('sumswebadtp = NA')
       }
-
+      
     }
     #    next
 
@@ -155,27 +176,27 @@ for(ireg in 1){#c(1:3,5)){
 #     aspDF <- data.frame(aspdate,c(NA,aspdatediff)) # add NA to beginning of diff vector to make same length
 #     aspDFgt1 <- aspDF[aspdatediff > 1,]
     
-    # run and time SnowMelt
-    asp <- aspall[is.finite(aspall$Precipitation) &
-                    is.finite(aspall$Temp..Max.) &
-                    is.finite(aspall$Temp..Min.) &
-                    is.finite(aspall$Snow.Water.Equivalent) &
-                    (aspall$Temp..Max. >= aspall$Temp..Min.),]
-    asp <- aspall[!logdiscard,]
-    aspdate <- as.Date(asp$Date,format=fmt)
-
-    out_asp[istn] <- paste(istn,try(
-      exectime[istn] <- round(system.time(
-        sm_asp[[istn]] <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
-                        Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
-      ),3)[3]
-    ))
-    #                     },error=function(cond){out_asp[istn]=cond},warning=function(cond){})
+#     # run and time SnowMelt
+#     asp <- aspall[is.finite(aspall$Precipitation) &
+#                     is.finite(aspall$Temp..Max.) &
+#                     is.finite(aspall$Temp..Min.) &
+#                     is.finite(aspall$Snow.Water.Equivalent) &
+#                     (aspall$Temp..Max. >= aspall$Temp..Min.),]
+#     asp <- aspall[!logdiscard,]
+#     aspdate <- as.Date(asp$Date,format=fmt)
+# 
+#     out_asp[istn] <- paste(istn,try(
+#       exectime[istn] <- round(system.time(
+#         sm_asp[[istn]] <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
+#                         Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
+#       ),3)[3]
+#     ))
+#     #                     },error=function(cond){out_asp[istn]=cond},warning=function(cond){})
   
-    aspswe <- asp$Snow.Water.Equivalent
-    smasp <- sm_asp[[istn]]$SnowWaterEq_mm
-    rmse_asp[istn] <- sqrt(mean((aspswe-smasp)^2,na.rm=T))
-    print(paste(stnname[istn],round(rmse_asp[istn],3),exectime[istn]))
+#     aspswe <- asp$Snow.Water.Equivalent
+#     smswe <- sm_asp[[istn]]$SnowWaterEq_mm
+#     rmse_asp[istn] <- sqrt(mean((aspswe-smswe)^2,na.rm=T))
+#     print(paste(stnname[istn],round(rmse_asp[istn],3),exectime[istn]))
     srct=srct+1
     stnrun[srct,1] = as.character(stnname[istn])
     stnrun[srct,2:3] = data.frame(round(rmse_asp[istn],3),exectime[istn])
@@ -186,8 +207,8 @@ for(ireg in 1){#c(1:3,5)){
     #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
     jpeg(paste("../plots/aspEco/aspEcoPchk/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],".jpg",sep=""),
          width=480*3,height=480*2,pointsize=24,quality=100)
-    plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smasp,na.rm=T)))
-    lines(aspdate,smasp,col="red",lwd=linew)
+    plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,na.rm=T)))
+    lines(aspdate,smswe,col="red",lwd=linew)
     title(paste("Station",stnname[istn]))#,"Exec time =",exectime[istn],"sec"))
     legend("topright",c("ASP measured","EcoH modeled"),col=c("black","red"),lwd=linew,bty="n")
     dev.off()
