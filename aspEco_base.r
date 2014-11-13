@@ -98,7 +98,8 @@ for(ireg in 1){#c(1:3,5)){
       logyr <- aspalldate>=dateseasoni & aspalldate<=dateseasonf
       logvalidmodel <- logyr & !logdiscard
       logvalidcompare <- logvalidmodel & !lognaswe
-      logvalidcompareyr <- logvalidcompare[logyr]
+      #logvalidcompareyr <- logvalidcompare[logyr]
+      logvalidcompareyr <- logvalidcompare[logvalidmodel]
       swediffnop <- swediff[logyr & logswenop] # case described by Dan
       sumswenop <- sum(swediffnop[swediffnop>0],na.rm=T) 
       swediffdisc <- swediff[logyr & logdiscard] # this is really what is needed
