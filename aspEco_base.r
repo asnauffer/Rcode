@@ -97,20 +97,17 @@ for(ireg in 1){#c(1:3,5)){
       dateseasonf = paste(iyr,'-07-01',sep='')
       logyr <- aspalldate>=dateseasoni & aspalldate<=dateseasonf
       logvalidmodel <- logyr & !logdiscard
+      logvalidcompare <- logvalidmodel & !lognaswe
       swediffnop <- swediff[logyr & logswenop] # case described by Dan
       sumswenop <- sum(swediffnop[swediffnop>0],na.rm=T) 
       swediffdisc <- swediff[logyr & logdiscard] # this is really what is needed
       sumswebadtp <- sum(swediffdisc[swediffdisc>0],na.rm=T) 
       validdates <- aspalldate[logvalidmodel]
       datediff <- diff(validdates)
-#       if(length(validdates)>0){
-#         print(paste(dateseasoni,'to',dateseasonf))
-#       }
       if(sum(logvalidmodel)==0){
         next
       }
       yrct <- yrct+1
-#      yearrun[yrct,1] <- as.character(stnname[istn])
       yri <- data.frame(stnname[istn],
                         dateyr=iyr,
                         numdates=sum(logyr),
@@ -118,7 +115,7 @@ for(ireg in 1){#c(1:3,5)){
                         numswebadtp=sum(logyr & logdiscard),
                         sumswebadtp=sumswebadtp,
                         numvalidmodel=sum(logvalidmodel),
-                        numvalidcompare=sum(logvalidmodel & !lognaswe),
+                        numvalidcompare=sum(logvalidcompare),
                         maxdategap=max(datediff,na.rm=T)
       )
       yrfi <- data.frame(yri,
@@ -147,9 +144,8 @@ for(ireg in 1){#c(1:3,5)){
         yearrunfull[yrct,] <- yrfi
       }
       if(is.na(sumswebadtp)){
-        print('stop')
+        print('sumswebadtp = NA')
       }
-      print(paste(dateseasoni,'to',dateseasonf))
 
     }
     #    next
