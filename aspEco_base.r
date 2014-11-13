@@ -44,7 +44,7 @@ stnrun <- data.frame(stnname=character(),
 srct <- 0
 yrct <- 0
 
-for(ireg in c(1:3,5)){
+for(ireg in 1){#c(1:3,5)){
   aspstnnums <- which(aspstnsel==ireg)
   for(istn in aspstnnums){
     print(paste("region",ireg,"stn:",istn,stnname[istn]))
@@ -101,8 +101,9 @@ for(ireg in c(1:3,5)){
       sumswenop <- sum(swediffnop[swediffnop>0],na.rm=T) 
       swediffdisc <- swediff[logyr & logdiscard] # this is really what is needed
       sumswebadtp <- sum(swediffdisc[swediffdisc>0],na.rm=T) 
-      validdatesi <- aspalldate[logvalidmodel]
-#       if(length(validdatesi)>0){
+      validdates <- aspalldate[logvalidmodel]
+      datediff <- diff(validdates)
+#       if(length(validdates)>0){
 #         print(paste(dateseasoni,'to',dateseasonf))
 #       }
       if(sum(logvalidmodel)==0){
@@ -113,34 +114,29 @@ for(ireg in c(1:3,5)){
       yri <- data.frame(stnname[istn],
                         dateyr=iyr,
                         numdates=sum(logyr),
-#                         numnatn=sum(logyr & lognatn),
-#                         numnatx=sum(logyr & lognatx),
-#                         numtxlttn=sum(logyr & logtxlttn,na.rm=T),
-#                         numnap=sum(logyr & lognap),
                         numbadtp=sum(logyr & logbadtp),
-#                        numswenop=sum(logyr & logswenop),
                         numswebadtp=sum(logyr & logdiscard),
-#                        sumswenop=sumswenop,
                         sumswebadtp=sumswebadtp,
                         numvalidmodel=sum(logvalidmodel),
-#                        numnaswe=sum(logyr & lognaswe),
-                        numvalidcompare=sum(logvalidmodel & !lognaswe)
+                        numvalidcompare=sum(logvalidmodel & !lognaswe),
+                        maxdategap=max(datediff,na.rm=T)
       )
-      yrfi <- data.frame(stnname[istn],
-                        dateyr=iyr,
-                        numdates=sum(logyr),
+      yrfi <- data.frame(yri,
+      #                   stnname[istn],
+      #                  dateyr=iyr,
+      #                  numdates=sum(logyr),
                         numnatn=sum(logyr & lognatn),
                         numnatx=sum(logyr & lognatx),
                         numtxlttn=sum(logyr & logtxlttn,na.rm=T),
                         numnap=sum(logyr & lognap),
-                        numbadtp=sum(logyr & logbadtp),
+      #                  numbadtp=sum(logyr & logbadtp),
                         numswenop=sum(logyr & logswenop),
-                        numswebadtp=sum(logyr & logdiscard),
+      #                  numswebadtp=sum(logyr & logdiscard),
                         sumswenop=sumswenop,
-                        sumswebadtp=sumswebadtp,
-                        numvalidmodel=sum(logvalidmodel),
+      #                  sumswebadtp=sumswebadtp,
+      #                  numvalidmodel=sum(logvalidmodel),
                         numnaswe=sum(logyr & lognaswe),
-                        numvalidcompare=sum(logvalidmodel & !lognaswe)
+      #                  numvalidcompare=sum(logvalidmodel & !lognaswe)
       )
       if(yrct==1){
         yearrun <- yri
