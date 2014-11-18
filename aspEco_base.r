@@ -4,11 +4,11 @@
 if(R.version[1]=="x86_64-pc-linux-gnu") {
   library("EcoHydRology", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
   library("R.matlab", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
-  setwd("/net/home/asnauffer/PhD/R")
+  setwd("/net/home/asnauffer/PhD/Rcode")
 } else {
   library("EcoHydRology", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
   library("R.matlab", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
-  setwd("C:/Users/Drew/Documents/PhD/R")
+  setwd("C:/Users/Drew/Documents/PhD/Rcode")
 }
 
 skipreload <- FALSE
@@ -44,7 +44,7 @@ stnrun <- data.frame(stnname=character(),
 srct <- 0
 yrct <- 0
 
-for(ireg in 1){#c(1:3,5)){
+for(ireg in c(1:3,5)){
   aspstnnums <- which(aspstnsel==ireg)
   for(istn in aspstnnums){
     print(paste("region",ireg,"stn:",istn,stnname[istn]))
