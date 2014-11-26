@@ -29,8 +29,8 @@ if(skipreload){
   # init vectors
 #   sm_asp <- vector("list",lstn)
 #   rmse_asp <- vector("numeric",lstn)
-  out_asp <- vector("list",lstn)
-  out_plot <- vector("list",lstn)
+  out_asp <- vector("list",1)
+  out_plot <- vector("list",1)
 #   exectime <- vector("numeric",lstn)
 }
 
@@ -172,6 +172,18 @@ for(ireg in 1){#c(1:3,5)){
       if(is.na(sumswebadtp)){
         print('sumswebadtp = NA')
       }
+      #plot asp and snowmelt curves
+      linew <- 3
+      out_plot[yrct] <- paste(istn,try({
+        #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
+        jpeg(paste("../plots/aspEco/aspEcoPchk/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],".jpg",sep=""),
+             width=480*3,height=480*2,pointsize=24,quality=100)
+        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,na.rm=T)))
+        lines(aspdate,smswe,col="red",lwd=linew)
+        title(paste("Station",stnname[istn]))#,"Exec time =",exectime[istn],"sec"))
+        legend("topright",c("ASP measured","EcoH modeled"),col=c("black","red"),lwd=linew,bty="n")
+        dev.off()
+      }))
       
     }
     #    next
@@ -206,19 +218,6 @@ for(ireg in 1){#c(1:3,5)){
 #     srct=srct+1
 #     stnrun[srct,1] = as.character(stnname[istn])
 #     stnrun[srct,2:3] = data.frame(round(rmse_asp[istn],3),exectime[istn])
-
-    #plot asp and snowmelt curves
-    linew <- 3
-    out_plot[istn] <- paste(istn,try({
-    #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
-    jpeg(paste("../plots/aspEco/aspEcoPchk/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],".jpg",sep=""),
-         width=480*3,height=480*2,pointsize=24,quality=100)
-    plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,na.rm=T)))
-    lines(aspdate,smswe,col="red",lwd=linew)
-    title(paste("Station",stnname[istn]))#,"Exec time =",exectime[istn],"sec"))
-    legend("topright",c("ASP measured","EcoH modeled"),col=c("black","red"),lwd=linew,bty="n")
-    dev.off()
-    }))
     
   }
 }
