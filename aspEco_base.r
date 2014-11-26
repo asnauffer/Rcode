@@ -4,12 +4,14 @@
 if(R.version[1]=="x86_64-pc-linux-gnu") {
   library("EcoHydRology", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
   library("R.matlab", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
-  setwd("/net/home/asnauffer/PhD/R")
+  setwd("/net/home/asnauffer/Documents/PhD/Rcode")
 } else {
   library("EcoHydRology", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
   library("R.matlab", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
-  setwd("C:/Users/Drew/Documents/PhD/R")
+  setwd("C:/Users/Drew/Documents/PhD/Rcode")
 }
+
+source('SnowMelt2L.R')
 
 skipreload <- FALSE
 if(skipreload){
@@ -25,11 +27,11 @@ if(skipreload){
   aspstnsel <- unlist(readMat("../matfiles/aspEcostn.mat"))
 
   # init vectors
-  sm_asp <- vector("list",lstn)
-  rmse_asp <- vector("numeric",lstn)
+#   sm_asp <- vector("list",lstn)
+#   rmse_asp <- vector("numeric",lstn)
   out_asp <- vector("list",lstn)
   out_plot <- vector("list",lstn)
-  exectime <- vector("numeric",lstn)
+#   exectime <- vector("numeric",lstn)
 }
 
 # set up for reruns
@@ -116,17 +118,19 @@ for(ireg in 1){#c(1:3,5)){
       aspdate <- as.Date(asp$Date,format=fmt)
       
       out_asp[yrct] <- paste(istn,try(
-        exectime[yrct] <- round(system.time(
-          sm_asp[[yrct]] <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
+        exectime <- round(system.time({
+          sm_asp <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
                                      Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
-        ),3)[3]
+          sm_asp2L <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
+                               Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
+        }),3)[3]
       ))
       #                     },error=function(cond){out_asp[istn]=cond},warning=function(cond){})
       aspswe <- asp$Snow.Water.Equivalent
-      smswe <- sm_asp[[yrct]]$SnowWaterEq_mm
-      rmse_asp[yrct] <- sqrt(mean((aspswe[logvalidcompareyr]-smswe[logvalidcompareyr])^2))
+      smswe <- sm_asp$SnowWaterEq_mm
+      rmse_asp <- sqrt(mean((aspswe[logvalidcompareyr]-smswe[logvalidcompareyr])^2))
                              #,na.rm=T))
-      print(paste(stnname[istn],round(rmse_asp[yrct],3),exectime[yrct]))
+      print(paste(stnname[istn],round(rmse_asp,3),exectime))
 
       yri <- data.frame(stnname[istn],
                         dateyr=iyr,
@@ -137,8 +141,8 @@ for(ireg in 1){#c(1:3,5)){
                         numvalidmodel=sum(logvalidmodel),
                         numvalidcompare=sum(logvalidcompare),
                         maxdategap=max(datediff,na.rm=T),
-                        exectime=exectime[yrct],
-                        rmse=rmse_asp[yrct]
+                        exectime=exectime,
+                        rmse=rmse_asp
       )
       yrfi <- data.frame(yri,
       #                   stnname[istn],
@@ -198,9 +202,10 @@ for(ireg in 1){#c(1:3,5)){
 #     smswe <- sm_asp[[istn]]$SnowWaterEq_mm
 #     rmse_asp[istn] <- sqrt(mean((aspswe-smswe)^2,na.rm=T))
 #     print(paste(stnname[istn],round(rmse_asp[istn],3),exectime[istn]))
-    srct=srct+1
-    stnrun[srct,1] = as.character(stnname[istn])
-    stnrun[srct,2:3] = data.frame(round(rmse_asp[istn],3),exectime[istn])
+
+#     srct=srct+1
+#     stnrun[srct,1] = as.character(stnname[istn])
+#     stnrun[srct,2:3] = data.frame(round(rmse_asp[istn],3),exectime[istn])
 
     #plot asp and snowmelt curves
     linew <- 3
