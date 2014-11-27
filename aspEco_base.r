@@ -46,7 +46,7 @@ stnrun <- data.frame(stnname=character(),
 srct <- 0
 yrct <- 0
 
-for(ireg in 1){#c(1:3,5)){
+for(ireg in c(1:3,5)){
   aspstnnums <- which(aspstnsel==ireg)
   for(istn in aspstnnums){
     print(paste("region",ireg,"stn:",istn,stnname[istn]))
@@ -128,6 +128,7 @@ for(ireg in 1){#c(1:3,5)){
       #                     },error=function(cond){out_asp[istn]=cond},warning=function(cond){})
       aspswe <- asp$Snow.Water.Equivalent
       smswe <- sm_asp$SnowWaterEq_mm
+      smswe2L <- sm_asp2L$SnowWaterEq_mm
       rmse_asp <- sqrt(mean((aspswe[logvalidcompareyr]-smswe[logvalidcompareyr])^2))
                              #,na.rm=T))
       print(paste(stnname[istn],round(rmse_asp,3),exectime))
@@ -176,12 +177,13 @@ for(ireg in 1){#c(1:3,5)){
       linew <- 3
       out_plot[yrct] <- paste(istn,try({
         #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
-        jpeg(paste("../plots/aspEco/aspEcoPchk/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],".jpg",sep=""),
+        jpeg(paste("../plots/aspEco/aspEco2L/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],".jpg",sep=""),
              width=480*3,height=480*2,pointsize=24,quality=100)
         plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,na.rm=T)))
         lines(aspdate,smswe,col="red",lwd=linew)
+        lines(aspdate,smswe2L,col="blue",lwd=linew)
         title(paste("Station",stnname[istn]))#,"Exec time =",exectime[istn],"sec"))
-        legend("topright",c("ASP measured","EcoH modeled"),col=c("black","red"),lwd=linew,bty="n")
+        legend("topright",c("ASP measured","EcoH modeled","EcoH 2L modeled"),col=c("black","red","blue"),lwd=linew,bty="n")
         dev.off()
       }))
       
