@@ -75,7 +75,6 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 	SnowWaterEq[1] <- max(0,startingSnowDepth_m/10-SnowMelt[1]+NewSnowWatEq[1])	
 	
 	
-
 ##  Snow Melt Loop	
 	for (i in 2:length(precip_m)){
 		if (NewSnow[i] > 0){ 
