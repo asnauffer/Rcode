@@ -91,14 +91,16 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 		if(SnowWaterEq[i-1] > 0 | NewSnowWatEq[i] > 0) {
 			DCoef[i] <- 6.2
 			if(SnowMelt[i-1] == 0){ 
-			  if(SnowWaterEq[i-1] <= SurfLayermax) {
+			  if(SnowWaterEq[i-1]+NewSnowWatEq[i] <= SurfLayermax) {
 			    SnowTemp[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTemp[i-1]+min(-SnowTemp[i-1],Energy[i-1]/((SnowDensity[i-1]*
 					  SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i])*SnowHeatCap*1000)))))
+          SnowTempUpper[i] <- SnowTemp[i]
+          SnowTempLower[i] <- SnowTemp[i]
 			  } else {
-			    SnowTempUpper[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTemp[i-1]+min(-SnowTemp[i-1],Energy[i-1]-G/((SnowDensity[i-1]*
-            SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i])*SnowHeatCap*1000)))))
-  				SnowTempLower[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTemp[i-1]+min(-SnowTemp[i-1],G/((SnowDensity[i-1]*
-            SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i])*SnowHeatCap*1000)))))
+			    SnowTempUpper[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTempUpper[i-1]+min(-SnowTempUpper[i-1],
+            Energy[i-1]-G/(SurfLayermax*SnowHeatCap*1000)))))
+  				SnowTempLower[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTempLower[i-1]+min(-SnowTempLower[i-1],
+            G/((SnowDensity[i-1]*SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i]-SurfLayermax)*SnowHeatCap*1000)))))
           SnowTemp[i] <- SnowTempUpper[i]
 			  }
 			}
@@ -109,7 +111,7 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 		E[i] <- lambdaV*(rhoa[i]-rhos[i])/rh[i]
 		Lt[i] <- Longwave(TE[i],SnowTemp[i])
     
-		if(SnowWaterEq[i-1] <= SurfLayermax) {
+		if(SnowWaterEq[i-1]+NewSnowWatEq[i] <= SurfLayermax) {
 		  
   		Energy[i] <- S[i] + La[i] - Lt[i] + H[i] + E[i] + G + P[i]
   
@@ -129,32 +131,31 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
       EnergyLower[i] <- G
       Energy[i] <- EnergyUpper[i] + EnergyLower[i]
       
-		  if (EnergyUpper[i]>0) k <- 2 else k <- 1
+# 		  if (EnergyUpper[i]>0) k <- 2 else k <- 1
+# 		  
+# 		  SnowDensityUpper[i] <- ifelse((SnowDepth[i-1]+NewSnow[i])>0, min(450, 
+#         ((SnowDensity[i-1]+k*30*(450-SnowDensity[i-1])*exp(-DCoef[i]))*SnowDepth[i-1] + NewSnowDensity[i]*NewSnow[i])/(SnowDepth[i-1]+NewSnow[i])), 450)
+# 		  SnowDensityLower[i] <- ifelse((SnowDepth[i-1]+NewSnow[i])>0, min(450, 
+#         ((SnowDensity[i-1]+k*30*(450-SnowDensity[i-1])*exp(-DCoef[i]))*SnowDepth[i-1] + NewSnowDensity[i]*NewSnow[i])/(SnowDepth[i-1]+NewSnow[i])), 450)
+#       SnowDensity[i] <- (SnowDensityUpper[i] + SnowDensityLower[i]) / 2
 		  
-		  SnowDensityUpper[i] <- ifelse((SnowDepth[i-1]+NewSnow[i])>0, min(450, 
-        ((SnowDensity[i-1]+k*30*(450-SnowDensity[i-1])*exp(-DCoef[i]))*SnowDepth[i-1] + NewSnowDensity[i]*NewSnow[i])/(SnowDepth[i-1]+NewSnow[i])), 450)
-		  SnowDensityLower[i] <- ifelse((SnowDepth[i-1]+NewSnow[i])>0, min(450, 
-        ((SnowDensity[i-1]+k*30*(450-SnowDensity[i-1])*exp(-DCoef[i]))*SnowDepth[i-1] + NewSnowDensity[i]*NewSnow[i])/(SnowDepth[i-1]+NewSnow[i])), 450)
-      SnowDensity[i] <- (SnowDensityUpper[i] + SnowDensityLower[i]) / 2
-		  
-		  SnowMeltUpper[i] <- max(0,	min( (SnowWaterEq[i-1]+NewSnowWatEq[i]),  # yesterday on ground + today new
-        (EnergyUpper[i]-SnowHeatCap*(SnowWaterEq[i-1]+NewSnowWatEq[i])*WaterDens*(0-SnowTempUpper[i]))/(LatHeatFreez*WaterDens) )  )
-		  SnowMeltLower[i] <- max(0,	min( (SnowWaterEq[i-1]+NewSnowWatEq[i]),  # yesterday on ground + today new
-        (EnergyLower[i]-SnowHeatCap*(SnowWaterEq[i-1]+NewSnowWatEq[i])*WaterDens*(0-SnowTempLower[i]))/(LatHeatFreez*WaterDens) )  )
+		  SnowMeltUpper[i] <- max(0,min(SurfLayermax,(EnergyUpper[i]-SnowHeatCap*SurfLayermax*WaterDens*(0-SnowTempUpper[i]))/(LatHeatFreez*WaterDens) )  )
+		  SnowMeltLower[i] <- max(0,min((SnowWaterEq[i-1]+NewSnowWatEq[i]-SurfLayermax),  # yesterday on ground + today new - upper layer
+        (EnergyLower[i]-SnowHeatCap*(SnowWaterEq[i-1]+NewSnowWatEq[i]-SurfLayermax)*WaterDens*(0-SnowTempLower[i]))/(LatHeatFreez*WaterDens) )  )
       SnowMelt[i] <- SnowMeltUpper[i] + SnowMeltLower[i]
 		  
-		  SnowDepthUpper[i] <- max(0,(SnowWaterEq[i-1]+NewSnowWatEq[i]-SnowMelt[i])*WaterDens/SnowDensity[i])
-		  SnowDepthLower[i] <- max(0,(SnowWaterEq[i-1]+NewSnowWatEq[i]-SnowMelt[i])*WaterDens/SnowDensity[i])
-		  SnowDepth[i] <- SnowDepthUpper[i] + SnowDepthLower[i]
+# 		  SnowDepthUpper[i] <- max(0,(SnowWaterEq[i-1]+NewSnowWatEq[i]-SnowMelt[i])*WaterDens/SnowDensity[i])
+# 		  SnowDepthLower[i] <- max(0,(SnowWaterEq[i-1]+NewSnowWatEq[i]-SnowMelt[i])*WaterDens/SnowDensity[i])
+# 		  SnowDepth[i] <- SnowDepthUpper[i] + SnowDepthLower[i]
 		  
-      SnowWaterEqUpper[i] <- max(0,SnowWaterEq[i-1]-SnowMelt[i]+NewSnowWatEq[i])	# (m) Equiv depth of water
-		  SnowWaterEqLower[i] <- max(0,SnowWaterEq[i-1]-SnowMelt[i]+NewSnowWatEq[i])  # (m) Equiv depth of water
+      SnowWaterEqUpper[i] <- max(0,SurfLayermax-SnowMeltUpper[i])	# (m) Equiv depth of water
+		  SnowWaterEqLower[i] <- max(0,SnowWaterEq[i-1]+NewSnowWatEq[i]-SurfLayermax-SnowMeltLower[i])  # (m) Equiv depth of water
 		  SnowWaterEq[i] <- SnowWaterEqUpper[i] + SnowWaterEqLower[i]
 		  
 		}
 	}
 	
-	Results<-data.frame(Date, Tmax_C, Tmin_C, precip_mm, R_m*1000, NewSnowWatEq*1000,SnowMelt*1000, NewSnow, SnowDepth, SnowWaterEq*1000)
-	colnames(Results)<-c("Date", "MaxT_C", "MinT_C", "Precip_mm", "Rain_mm", "SnowfallWatEq_mm", "SnowMelt_mm", "NewSnow_m", "SnowDepth_m", "SnowWaterEq_mm")
+	Results<-data.frame(Date, Tmax_C, Tmin_C, precip_mm, R_m*1000, NewSnowWatEq*1000,SnowMelt*1000, SnowMeltUpper*1000, SnowMeltLower*1000, NewSnow, SnowDepth, SnowWaterEq*1000)
+	colnames(Results)<-c("Date", "MaxT_C", "MinT_C", "Precip_mm", "Rain_mm", "SnowfallWatEq_mm", "SnowMelt_mm","SnowMeltUpper_mm","SnowMeltLower_mm", "NewSnow_m", "SnowDepth_m", "SnowWaterEq_mm")
 	return(Results)
 }	

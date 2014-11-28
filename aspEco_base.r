@@ -4,18 +4,14 @@
 if(R.version[1]=="x86_64-pc-linux-gnu") {
   library("EcoHydRology", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
   library("R.matlab", lib.loc="/net/home/asnauffer/R/x86_64-pc-linux-gnu-library/3.1")
-<<<<<<< HEAD
-  setwd("/net/home/asnauffer/PhD/Rcode")
-=======
   setwd("/net/home/asnauffer/Documents/PhD/Rcode")
->>>>>>> d58606caabe804cf07f59ff1ea4132a4f55bf9a7
 } else {
   library("EcoHydRology", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
   library("R.matlab", lib.loc="C:/Users/drew/Documents/R/win-library/3.1")
   setwd("C:/Users/Drew/Documents/PhD/Rcode")
 }
 
-source('SnowMelt2L.R')
+#source('SnowMelt2L.R')
 
 skipreload <- FALSE
 if(skipreload){
@@ -50,9 +46,9 @@ stnrun <- data.frame(stnname=character(),
 srct <- 0
 yrct <- 0
 
-for(ireg in c(1:3,5)){
+for(ireg in 3){#c(1:3,5)){
   aspstnnums <- which(aspstnsel==ireg)
-  for(istn in aspstnnums){
+  for(istn in aspstnnums[1]){
     print(paste("region",ireg,"stn:",istn,stnname[istn]))
     #for(istn in 1:lstn){
     #for(istn in rerun){
@@ -181,12 +177,12 @@ for(ireg in c(1:3,5)){
       linew <- 3
       out_plot[yrct] <- paste(istn,try({
         #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
-        jpeg(paste("../plots/aspEco/aspEco2L/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],".jpg",sep=""),
+        jpeg(paste("../plots/aspEco/aspEco2L/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],"_",iyr,".jpg",sep=""),
              width=480*3,height=480*2,pointsize=24,quality=100)
-        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,na.rm=T)))
+        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,smswe2L,na.rm=T)))
         lines(aspdate,smswe,col="red",lwd=linew)
         lines(aspdate,smswe2L,col="blue",lwd=linew)
-        title(paste("Station",stnname[istn]))#,"Exec time =",exectime[istn],"sec"))
+        title(paste("Station",stnname[istn],iyr))#,"Exec time =",exectime[istn],"sec"))
         legend("topright",c("ASP measured","EcoH modeled","EcoH 2L modeled"),col=c("black","red","blue"),lwd=linew,bty="n")
         dev.off()
       }))
