@@ -7,7 +7,7 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 	SnowHeatCap <- 2.1			# kJ/kg/C
 	LatHeatFreez <- 333.3		# kJ/kg
 	Cw <- 4.2*10^3				# Heat Capacity of Water (kJ/m3/C)
-  SurfLayermax <- 100     # max surface layer thickness (mm SWE)
+  SurfLayermax <- 0.1     # max surface layer thickness (m SWE)
 	
 ##	Converted Inputs :
 	Tav <- (Tmax_C+Tmin_C)/2		# degrees C
@@ -28,6 +28,8 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 
 #  New Variables	:
 	SnowTemp 		<- rep(0,length(precip_m)) 		# Degrees C
+  SnowTempUpper 		<- rep(0,length(precip_m)) 		# Degrees C
+  SnowTempLower 		<- rep(0,length(precip_m)) 		# Degrees C
 	rhos 			<- SatVaporDensity(SnowTemp)	# 	vapor density at surface (kg/m3)
 	rhoa 			<- SatVaporDensity(Tmin_C)		#	vapor density of atmoshpere (kg/m3) 
 	SnowWaterEq 	<- vector(length=length(precip_mm))		#  (m) Equiv depth of water
