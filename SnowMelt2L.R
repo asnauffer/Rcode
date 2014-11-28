@@ -105,7 +105,8 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 			  }
 			}
 		}
-		
+
+    
 		rhos[i] <- SatVaporDensity(SnowTemp[i])
 		H[i] <- 1.29*(Tav[i]-SnowTemp[i])/rh[i] 
 		E[i] <- lambdaV*(rhoa[i]-rhos[i])/rh[i]
