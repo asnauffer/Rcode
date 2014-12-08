@@ -125,7 +125,7 @@ for(ireg in 2:3){#c(1:3,5)){
           sm_asp2L <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
                                Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
           sm_accum <- SnowAccum(Date=aspdate, precip_mm=asp$Precipitation,
-                                 Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn]
+                                 Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn],
                                 logNoAccumWarm=TRUE)
           sm_accumwarm <- SnowAccum(Date=aspdate, precip_mm=asp$Precipitation,
                                 Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn],
@@ -138,6 +138,7 @@ for(ireg in 2:3){#c(1:3,5)){
       smswe <- sm_asp$SnowWaterEq_mm
       smswe2L <- sm_asp2L$SnowWaterEq_mm
       smsweaccum <- sm_accum$SnowWaterEq_mm
+      smsweaccumwarm <- sm_accumwarm$SnowWaterEq_mm
       rmse_asp <- sqrt(mean((aspswe[logvalidcompareyr]-smswe[logvalidcompareyr])^2))
       mae_asp <- mean(abs(aspswe[logvalidcompareyr]-smswe[logvalidcompareyr]))
       
@@ -189,15 +190,18 @@ for(ireg in 2:3){#c(1:3,5)){
         linew <- 3
         out_plot[yrct] <- paste(istn,try({
           #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
-          jpeg(paste("../plots/aspEco/aspEcoswebad_rmse/",sprintf("%02d",sumswebadtp),"_",round(mae_asp),"_",stnname[istn],"_",iyr,".jpg",sep=""),
+          #jpeg(paste("../plots/aspEco/aspEcoswebad_rmse/",sprintf("%02d",sumswebadtp),"_",round(mae_asp),"_",stnname[istn],"_",iyr,".jpg",sep=""),
+          jpeg(paste("../plots/aspEco/",sprintf("%02d",sumswebadtp),"_",round(mae_asp),"_",stnname[istn],"_",iyr,".jpg",sep=""),
                width=480*3,height=480*2,pointsize=24,quality=100)
-          plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,smswe2L,smsweaccum,na.rm=T)))
+          plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,smswe2L,smsweaccum,smsweaccumwarm,na.rm=T)))
           lines(aspdate,smswe,col="red",lwd=linew)
           lines(aspdate,smswe2L,col="blue",lwd=linew)
           lines(aspdate,smsweaccum,col="green",lwd=linew)
+          lines(aspdate,smsweaccumwarm,col="darkorange",lwd=linew)
           title(paste("Station",stnname[istn],iyr))#,"Exec time =",exectime[istn],"sec"))
-          legend("topright",c("ASP measured","EcoH modeled","EcoH 2L modeled","Precip snow measured"),col=c("black","red","blue","green"),lwd=linew,bty="n")
+          legend("topright",c("ASP measured","EcoH modeled","EcoH 2L modeled","P as snow meas","Total P meas"),col=c("black","red","blue","green","darkorange"),lwd=linew,bty="n")
           dev.off()
+          print(paste("../plots/aspEco/",sprintf("%02d",sumswebadtp),"_",round(mae_asp),"_",stnname[istn],"_",iyr,".jpg plotted",sep=""))
         }))
       }
     }
