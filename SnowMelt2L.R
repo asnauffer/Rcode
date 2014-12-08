@@ -90,18 +90,39 @@ SnowMelt2L<-function(Date, precip_mm, Tmax_C, Tmin_C, lat_deg, slope=0, aspect=0
 		if(SnowDepth[i-1] > 0) TE[i] <- 0.97 	#	(-) Terrestrial Emissivity
 		if(SnowWaterEq[i-1] > 0 | NewSnowWatEq[i] > 0) {
 			DCoef[i] <- 6.2
-			if(SnowMelt[i-1] == 0){ 
-				if(SnowWaterEq[i-1]+NewSnowWatEq[i] <= SurfLayermax) {
+			if(SnowMelt[i-1] == 0){ # REMOVE CONDITIONAL?
+				if(SnowWaterEq[i-1]+NewSnowWatEq[i] <= SurfLayermax) { # recalculate snow temperature using 1 layer 
 					SnowTemp[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTemp[i-1]+min(-SnowTemp[i-1],Energy[i-1]/((SnowDensity[i-1]*
 					  SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i])*SnowHeatCap*1000)))))
 					SnowTempUpper[i] <- SnowTemp[i]
 					SnowTempLower[i] <- SnowTemp[i]
-				} else {
-					SnowTempUpper[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTempUpper[i-1]+min(-SnowTempUpper[i-1],
-					  Energy[i-1]-G/(SurfLayermax*SnowHeatCap*1000)))))
-					SnowTempLower[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTempLower[i-1]+min(-SnowTempLower[i-1],
-					  G/((SnowDensity[i-1]*SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i]-SurfLayermax)*SnowHeatCap*1000)))))
-					SnowTemp[i] <- SnowTempUpper[i]
+				} else { # recalculate upper and lower snow temperatures using 2 layers
+					PrevSnowTempUpper <- max(min(0,Tmin_C[i]),min(0,SnowTempUpper[i-1]+Energy[i-1]-G/(SurfLayermax*SnowHeatCap*1000)))
+					PrevSnowTempLower <- max(min(0,Tmin_C[i]),min(0,SnowTempLower[i-1]+G/((SnowDensity[i-1]*SnowDepth[i-1]-SurfLayermax)*SnowHeatCap*1000)))
+					if(NewSnowWatEq[i] >= SurfLayermax) { # new snow >= surface layer, surface is all new snow, base is old snow and any excess new snow
+						# new upper temp = air temp
+						SnowTempUpper[i] <- Tav[i]
+						# new lower temp:  blend previous upper & lower layer (accounting for snow temp change) with remainder of new snow
+						SnowTempLower[i] <- (Tav[i]*(NewSnowWatEq[i]-SurfLayermax) +
+						  PrevSnowTempUpper*SurfLayermax +
+						  PrevSnowTempLower*(SnowWaterEq[i-1]-SurfLayermax)) /
+						  SnowWaterEq[i-1]+NewSnowWatEq[i]-SurfLayermax
+
+					} else if(NewSnowWatEq[i] < SurfLayermax) { # new snow < surface layer, surface is old snow and any new snow, base is all old
+						# new upper temp = blend previous upper layer (accounting for snow temp change) with new snow
+						SnowTempUpper[i] <- (Tav[i]*NewSnowWatEq[i] +
+						  PrevSnowTempUpper*(SurfLayermax-NewSnowWatEq[i])) /
+						  SurfLayermax
+						# new lower temp:  blend remainder of previous upper layer with lower layer (accounting for snow temp change in both)
+						SnowTempLower[i] <- (PrevSnowTempUpper*NewSnowWatEq[i] +
+						  PrevSnowTempLower*(SnowWaterEq[i-1]-NewSnowWatEq[i])) /
+						  SnowWaterEq[i-1]+NewSnowWatEq[i]-SurfLayermax
+					}
+					#SnowTempUpper[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTempUpper[i-1]+min(-SnowTempUpper[i-1],
+					#  Energy[i-1]-G/(SurfLayermax*SnowHeatCap*1000)))))
+					#SnowTempLower[i] <- max(min(0,Tmin_C[i]),min(0,(SnowTempLower[i-1]+min(-SnowTempLower[i-1],
+					#  G/((SnowDensity[i-1]*SnowDepth[i-1]+NewSnow[i]*NewSnowDensity[i]-SurfLayermax)*SnowHeatCap*1000)))))
+					#SnowTemp[i] <- SnowTempUpper[i]
 				}
 			}
 		}

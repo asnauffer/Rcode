@@ -11,7 +11,8 @@ if(R.version[1]=="x86_64-pc-linux-gnu") {
   setwd("C:/Users/Drew/Documents/PhD/Rcode")
 }
 
-#source('SnowMelt2L.R')
+source('SnowMelt2L.R')
+source('SnowAccum.R')
 
 skipreload <- FALSE
 if(skipreload){
@@ -46,7 +47,7 @@ stnrun <- data.frame(stnname=character(),
 srct <- 0
 yrct <- 0
 
-for(ireg in 3){#c(1:3,5)){
+for(ireg in 2:3){#c(1:3,5)){
   aspstnnums <- which(aspstnsel==ireg)
   for(istn in aspstnnums[1]){
     print(paste("region",ireg,"stn:",istn,stnname[istn]))
@@ -123,15 +124,24 @@ for(ireg in 3){#c(1:3,5)){
                                      Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
           sm_asp2L <- SnowMelt2L(Date=aspdate, precip_mm=asp$Precipitation,
                                Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
+          sm_accum <- SnowAccum(Date=aspdate, precip_mm=asp$Precipitation,
+                                 Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn]
+                                logNoAccumWarm=TRUE)
+          sm_accumwarm <- SnowAccum(Date=aspdate, precip_mm=asp$Precipitation,
+                                Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn],
+                                logNoAccumWarm=FALSE)
+          
         }),3)[3]
       ))
       #                     },error=function(cond){out_asp[istn]=cond},warning=function(cond){})
       aspswe <- asp$Snow.Water.Equivalent
       smswe <- sm_asp$SnowWaterEq_mm
       smswe2L <- sm_asp2L$SnowWaterEq_mm
+      smsweaccum <- sm_accum$SnowWaterEq_mm
       rmse_asp <- sqrt(mean((aspswe[logvalidcompareyr]-smswe[logvalidcompareyr])^2))
-                             #,na.rm=T))
-      print(paste(stnname[istn],round(rmse_asp,3),exectime))
+      mae_asp <- mean(abs(aspswe[logvalidcompareyr]-smswe[logvalidcompareyr]))
+      
+      print(paste(stnname[istn],iyr,round(rmse_asp,3),exectime))
 
       yri <- data.frame(stnname[istn],
                         dateyr=iyr,
@@ -143,6 +153,7 @@ for(ireg in 3){#c(1:3,5)){
                         numvalidcompare=sum(logvalidcompare),
                         maxdategap=max(datediff,na.rm=T),
                         exectime=exectime,
+                        mae=mae_asp,
                         rmse=rmse_asp
       )
       yrfi <- data.frame(yri,
@@ -174,19 +185,21 @@ for(ireg in 3){#c(1:3,5)){
         print('sumswebadtp = NA')
       }
       #plot asp and snowmelt curves
-      linew <- 3
-      out_plot[yrct] <- paste(istn,try({
-        #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
-        jpeg(paste("../plots/aspEco/aspEco2L/",aspphysionum[istn],"_",nrow(asp),"_",stnname[istn],"_",iyr,".jpg",sep=""),
-             width=480*3,height=480*2,pointsize=24,quality=100)
-        plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,smswe2L,na.rm=T)))
-        lines(aspdate,smswe,col="red",lwd=linew)
-        lines(aspdate,smswe2L,col="blue",lwd=linew)
-        title(paste("Station",stnname[istn],iyr))#,"Exec time =",exectime[istn],"sec"))
-        legend("topright",c("ASP measured","EcoH modeled","EcoH 2L modeled"),col=c("black","red","blue"),lwd=linew,bty="n")
-        dev.off()
-      }))
-      
+      if(sumswebadtp<100){
+        linew <- 3
+        out_plot[yrct] <- paste(istn,try({
+          #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
+          jpeg(paste("../plots/aspEco/aspEcoswebad_rmse/",sprintf("%02d",sumswebadtp),"_",round(mae_asp),"_",stnname[istn],"_",iyr,".jpg",sep=""),
+               width=480*3,height=480*2,pointsize=24,quality=100)
+          plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,smswe2L,smsweaccum,na.rm=T)))
+          lines(aspdate,smswe,col="red",lwd=linew)
+          lines(aspdate,smswe2L,col="blue",lwd=linew)
+          lines(aspdate,smsweaccum,col="green",lwd=linew)
+          title(paste("Station",stnname[istn],iyr))#,"Exec time =",exectime[istn],"sec"))
+          legend("topright",c("ASP measured","EcoH modeled","EcoH 2L modeled","Precip snow measured"),col=c("black","red","blue","green"),lwd=linew,bty="n")
+          dev.off()
+        }))
+      }
     }
     #    next
 
