@@ -20,8 +20,8 @@ stnname <- asplatlon$stnname
 stnlat <- asplatlon$stnlatlon.1  # lat used in SnowMelt
 stnlon <- asplatlon$stnlatlon.2
 lstn <- length(stnname)
-aspphysionum <- unlist(readMat("../matfiles/aspphysionum.mat"))
-aspstnsel <- unlist(readMat("../matfiles/aspEcostn.mat"))
+#aspphysionum <- unlist(readMat("../matfiles/aspphysionum.mat"))
+#aspstnsel <- unlist(readMat("../matfiles/aspEcostn.mat"))
 
 # init vectors
 out_asp <- vector("list",1)
@@ -30,17 +30,16 @@ out_plot <- vector("list",1)
 srct <- 0
 yrct <- 0
 
-for(ireg in c(1:3,5)){
-  aspstnnums <- which(aspstnsel==ireg)
+aspstnnums <- c(11,51,12,43,56,61,13,40)
+
+#for(ireg in c(1:3,5)){
+#  aspstnnums <- which(aspstnsel==ireg)
   for(istn in aspstnnums){
     print(paste("region",ireg,"stn:",istn,stnname[istn]))
-  
-    # ASP
-    
+    next
+    # read and interpret data
     fn <- paste("../data/ASP/",stnname[istn],".csv",sep="")
-    #  print(paste(istn,fn))
     aspallna <- read.csv(fn,skip=8)
-    # read and interpret date
     if(is.element(istn,c(2,3,38,57))){
       fmt <- "%m/%d/%Y"
     }else{
@@ -176,5 +175,5 @@ for(ireg in c(1:3,5)){
       }
     }
   }
-}
+#}
 
