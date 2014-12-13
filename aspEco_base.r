@@ -14,45 +14,26 @@ if(R.version[1]=="x86_64-pc-linux-gnu") {
 source('SnowMelt2L.R')
 source('SnowAccum.R')
 
-skipreload <- FALSE
-if(skipreload){
-  print("skipping data load & variable init")
-} else {
-  print("loading and initializing...")
-  asplatlon <- data.frame(readMat("../matfiles/ASPalllatlon.mat"))
-  stnname <- asplatlon$stnname
-  stnlat <- asplatlon$stnlatlon.1  # lat used in SnowMelt
-  stnlon <- asplatlon$stnlatlon.2
-  lstn <- length(stnname)
-  aspphysionum <- unlist(readMat("../matfiles/aspphysionum.mat"))
-  aspstnsel <- unlist(readMat("../matfiles/aspEcostn.mat"))
+print("loading and initializing...")
+asplatlon <- data.frame(readMat("../matfiles/ASPalllatlon.mat"))
+stnname <- asplatlon$stnname
+stnlat <- asplatlon$stnlatlon.1  # lat used in SnowMelt
+stnlon <- asplatlon$stnlatlon.2
+lstn <- length(stnname)
+aspphysionum <- unlist(readMat("../matfiles/aspphysionum.mat"))
+aspstnsel <- unlist(readMat("../matfiles/aspEcostn.mat"))
 
-  # init vectors
-#   sm_asp <- vector("list",lstn)
-#   rmse_asp <- vector("numeric",lstn)
-  out_asp <- vector("list",1)
-  out_plot <- vector("list",1)
-#   exectime <- vector("numeric",lstn)
-}
+# init vectors
+out_asp <- vector("list",1)
+out_plot <- vector("list",1)
 
-# set up for reruns
-#rerun <- c(6,27,29,38,43,54,71)
-#rerun2 <- c(2,3,57)
-#rerun3 <- 11#16#38
-
-stnrun <- data.frame(stnname=character(),
-                     rmse=numeric(),
-                     exectime=numeric(),
-                     stringsAsFactors=FALSE)
 srct <- 0
 yrct <- 0
 
-for(ireg in 2:3){#c(1:3,5)){
+for(ireg in c(1:3,5)){
   aspstnnums <- which(aspstnsel==ireg)
-  for(istn in aspstnnums[1]){
+  for(istn in aspstnnums){
     print(paste("region",ireg,"stn:",istn,stnname[istn]))
-    #for(istn in 1:lstn){
-    #for(istn in rerun){
   
     # ASP
     
@@ -133,7 +114,6 @@ for(ireg in 2:3){#c(1:3,5)){
           
         }),3)[3]
       ))
-      #                     },error=function(cond){out_asp[istn]=cond},warning=function(cond){})
       aspswe <- asp$Snow.Water.Equivalent
       smswe <- sm_asp$SnowWaterEq_mm
       smswe2L <- sm_asp2L$SnowWaterEq_mm
@@ -158,21 +138,13 @@ for(ireg in 2:3){#c(1:3,5)){
                         rmse=rmse_asp
       )
       yrfi <- data.frame(yri,
-      #                   stnname[istn],
-      #                  dateyr=iyr,
-      #                  numdates=sum(logyr),
                         numnatn=sum(logyr & lognatn),
                         numnatx=sum(logyr & lognatx),
                         numtxlttn=sum(logyr & logtxlttn,na.rm=T),
                         numnap=sum(logyr & lognap),
-      #                  numbadtp=sum(logyr & logbadtp),
                         numswenop=sum(logyr & logswenop),
-      #                  numswebadtp=sum(logyr & logdiscard),
                         sumswenop=sumswenop,
-      #                  sumswebadtp=sumswebadtp,
-      #                  numvalidmodel=sum(logvalidmodel),
                         numnaswe=sum(logyr & lognaswe)
-      #                  numvalidcompare=sum(logvalidmodel & !lognaswe)
       )
       if(yrct==1){
         yearrun <- yri
@@ -189,8 +161,6 @@ for(ireg in 2:3){#c(1:3,5)){
       if(sumswebadtp<100){
         linew <- 3
         out_plot[yrct] <- paste(istn,try({
-          #  pdf(paste("../plots/aspEco/",stnname[istn],".pdf",sep=""),width=6*3,height=6*2,pointsize=24)
-          #jpeg(paste("../plots/aspEco/aspEcoswebad_rmse/",sprintf("%02d",sumswebadtp),"_",round(mae_asp),"_",stnname[istn],"_",iyr,".jpg",sep=""),
           jpeg(paste("../plots/aspEco/",sprintf("%02d",sumswebadtp),"_",round(mae_asp),"_",stnname[istn],"_",iyr,".jpg",sep=""),
                width=480*3,height=480*2,pointsize=24,quality=100)
           plot(aspdate,aspswe,col="black","l",xlab="",ylab="SWE (mm)",lwd=linew,ylim=c(0,max(aspswe,smswe,smswe2L,smsweaccum,smsweaccumwarm,na.rm=T)))
@@ -205,39 +175,6 @@ for(ireg in 2:3){#c(1:3,5)){
         }))
       }
     }
-    #    next
-
-    # check for gaps in time series > 1 day
-#     aspdatediff <- as.numeric(diff(aspdate)) 
-#     aspDF <- data.frame(aspdate,c(NA,aspdatediff)) # add NA to beginning of diff vector to make same length
-#     aspDFgt1 <- aspDF[aspdatediff > 1,]
-    
-#     # run and time SnowMelt
-#     asp <- aspall[is.finite(aspall$Precipitation) &
-#                     is.finite(aspall$Temp..Max.) &
-#                     is.finite(aspall$Temp..Min.) &
-#                     is.finite(aspall$Snow.Water.Equivalent) &
-#                     (aspall$Temp..Max. >= aspall$Temp..Min.),]
-#     asp <- aspall[!logdiscard,]
-#     aspdate <- as.Date(asp$Date,format=fmt)
-# 
-#     out_asp[istn] <- paste(istn,try(
-#       exectime[istn] <- round(system.time(
-#         sm_asp[[istn]] <- SnowMelt(Date=aspdate, precip_mm=asp$Precipitation,
-#                         Tmax_C=asp$Temp..Max., Tmin_C=asp$Temp..Min., lat_deg=stnlat[istn])
-#       ),3)[3]
-#     ))
-#     #                     },error=function(cond){out_asp[istn]=cond},warning=function(cond){})
-  
-#     aspswe <- asp$Snow.Water.Equivalent
-#     smswe <- sm_asp[[istn]]$SnowWaterEq_mm
-#     rmse_asp[istn] <- sqrt(mean((aspswe-smswe)^2,na.rm=T))
-#     print(paste(stnname[istn],round(rmse_asp[istn],3),exectime[istn]))
-
-#     srct=srct+1
-#     stnrun[srct,1] = as.character(stnname[istn])
-#     stnrun[srct,2:3] = data.frame(round(rmse_asp[istn],3),exectime[istn])
-    
   }
 }
 
